@@ -1,0 +1,10 @@
+{
+  "data_path": "archive/dataset.csv",
+  "model_path": "student_success_multiclass.pkl",
+  "classes": [
+    "Dropout",
+    "Enrolled",
+    "Graduate"
+  ],
+  "notes": "Use clean_column_names + add_feature_engineering BEFORE training and BEFORE prediction on website."
+}
