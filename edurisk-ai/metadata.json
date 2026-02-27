@@ -1,0 +1,5 @@
+{
+  "name": "EduRisk AI",
+  "description": "Early student outcome prediction system using academic, financial, and socio-economic data to identify at-risk students.",
+  "requestFramePermissions": []
+}

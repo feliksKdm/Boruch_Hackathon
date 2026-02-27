@@ -134,6 +134,17 @@ async def predict_csv(file: UploadFile = File(...)):
     return StreamingResponse(iter([stream.getvalue()]), media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=\"{filename}\""})
 
 
-@app.get("/")
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+
+# mount a static directory (optional, for future assets)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/", response_class=HTMLResponse)
 def root():
-    return {"message": "Student success prediction API. POST to /predict or /predict_csv."}
+    # serve the simple frontend page
+    try:
+        with open("frontend.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(f.read())
+    except FileNotFoundError:
+        return HTMLResponse("<h1>Frontend not found</h1>", status_code=404)

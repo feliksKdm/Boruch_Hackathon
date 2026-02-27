@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Success Predictor</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a38;
+    --accent: #7cffb2;
+    --accent2: #ff6b6b;
+    --accent3: #6b8fff;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --danger: #ff4d4d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,255,178,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,255,178,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .header-tag {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-tag::before {
+    content: '';
+    width: 20px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  h1 span {
+    color: var(--accent);
+    position: relative;
+    display: inline-block;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    max-width: 500px;
+    line-height: 1.7;
+  }
+
+  /* API config bar */
+  .api-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 40px;
+  }
+
+  .api-bar label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .api-bar input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .status-dot.online { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .status-dot.offline { background: var(--danger); }
+
+  /* Tab nav */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 24px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -1px;
+    letter-spacing: 0.05em;
+  }
+
+  .tab-btn.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-btn:hover { color: var(--text); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Form grid */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .field input, .field select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    transition: border-color 0.2s;
+    outline: none;
+    width: 100%;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+
+  .field select option { background: var(--surface2); }
+
+  /* Section headers in form */
+  .form-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin: 28px 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .form-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 14px 32px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary:hover {
+    background: #90ffbe;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(124,255,178,0.25);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 14px 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  /* Result panel */
+  .result-panel {
+    display: none;
+    margin-top: 32px;
+    animation: fadeSlide 0.3s ease;
+  }
+
+  .result-panel.visible { display: block; }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-header {
+    padding: 20px 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px 10px 0 0;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+  }
+
+  .result-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .prediction-badge {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .prediction-badge.graduate { color: var(--accent); }
+  .prediction-badge.dropout { color: var(--accent2); }
+  .prediction-badge.enrolled { color: var(--accent3); }
+
+  .confidence-pill {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid;
+    letter-spacing: 0.05em;
+  }
+
+  .result-body {
+    border: 1px solid var(--border);
+    border-radius: 0 0 10px 10px;
+    background: var(--surface2);
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }
+
+  .prob-item {}
+
+  .prob-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .prob-bar-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  .prob-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .prob-bar-fill.graduate { background: var(--accent); }
+  .prob-bar-fill.dropout { background: var(--accent2); }
+  .prob-bar-fill.enrolled { background: var(--accent3); }
+
+  .prob-value {
+    font-size: 20px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+  }
+
+  /* Risk score */
+  .risk-indicator {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .risk-score-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    flex-shrink: 0;
+    border: 2px solid;
+  }
+
+  .risk-score-circle.low { border-color: var(--accent); color: var(--accent); }
+  .risk-score-circle.medium { border-color: #ffc107; color: #ffc107; }
+  .risk-score-circle.high { border-color: var(--accent2); color: var(--accent2); }
+
+  .risk-text p { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+  .risk-text strong { font-size: 13px; color: var(--text); }
+
+  /* CSV Upload */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 48px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(124,255,178,0.03);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .upload-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .upload-sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .file-selected {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-top: 16px;
+  }
+
+  .file-selected.visible { display: flex; }
+
+  .file-selected .filename {
+    flex: 1;
+    font-size: 13px;
+    color: var(--accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Error / Loading states */
+  .error-box {
+    display: none;
+    padding: 14px 16px;
+    background: rgba(255,77,77,0.08);
+    border: 1px solid rgba(255,77,77,0.3);
+    border-radius: 8px;
+    color: var(--danger);
+    font-size: 13px;
+    margin-top: 16px;
+  }
+
+  .error-box.visible { display: block; }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-top-color: var(--bg);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  .btn-primary.loading .spinner { display: block; }
+  .btn-primary.loading .btn-text { display: none; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Footer */
+  footer {
+    margin-top: 64px;
+    padding: 24px 0;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  @media (max-width: 600px) {
+    .result-body { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-tag">ML Prediction System</div>
+    <h1>Student <span>Success</span><br>Predictor</h1>
+    <p class="subtitle">Predict student outcomes — Graduate, Enrolled, or Dropout — using academic and demographic features.</p>
+  </header>
+
+  <!-- API config -->
+  <div class="api-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <label>API URL</label>
+    <input type="text" id="apiUrl" value="http://localhost:8000" placeholder="http://localhost:8000">
+    <button class="btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="pingApi()">Ping</button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('single', this)">Single Student</button>
+    <button class="tab-btn" onclick="switchTab('batch', this)">Batch CSV</button>
+  </div>
+
+  <!-- Single prediction tab -->
+  <div class="tab-panel active" id="tab-single">
+
+    <div class="form-section-title">Personal Info</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Age at Enrollment</label>
+        <input type="number" id="age_at_enrollment" placeholder="e.g. 19" value="20">
+      </div>
+      <div class="field">
+        <label>Gender</label>
+        <select id="gender">
+          <option value="1">Male</option>
+          <option value="0">Female</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Marital Status</label>
+        <select id="marital_status">
+          <option value="1">Single</option>
+          <option value="2">Married</option>
+          <option value="3">Widowed</option>
+          <option value="4">Divorced</option>
+          <option value="5">Common-law</option>
+          <option value="6">Legally separated</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>International</label>
+        <select id="international">
+          <option value="0">No</option>
+          <option value="1">Yes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Displaced</label>
+        <select id="displaced">
+          <option value="0">No</option>
+          <option value="1">Yes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Special Needs</label>
+        <select id="educational_special_needs">
+          <option value="0">No</option>
+          <option value="1">Yes</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section-title">Academic Background</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Application Mode</label>
+        <input type="number" id="application_mode" placeholder="1-57" value="1">
+      </div>
+      <div class="field">
+        <label>Application Order</label>
+        <input type="number" id="application_order" placeholder="0-9" value="1">
+      </div>
+      <div class="field">
+        <label>Course</label>
+        <input type="number" id="course" placeholder="Course ID" value="9254">
+      </div>
+      <div class="field">
+        <label>Previous Qualification</label>
+        <input type="number" id="previous_qualification" placeholder="Code" value="1">
+      </div>
+      <div class="field">
+        <label>Previous Qual. Grade</label>
+        <input type="number" id="previous_qualification_grade" placeholder="0-200" value="140">
+      </div>
+      <div class="field">
+        <label>Admission Grade</label>
+        <input type="number" id="admission_grade" placeholder="0-200" value="130">
+      </div>
+      <div class="field">
+        <label>Daytime Attendance</label>
+        <select id="daytime_evening_attendance">
+          <option value="1">Daytime</option>
+          <option value="0">Evening</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Scholarship Holder</label>
+        <select id="scholarship_holder">
+          <option value="0">No</option>
+          <option value="1">Yes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Debtor</label>
+        <select id="debtor">
+          <option value="0">No</option>
+          <option value="1">Yes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tuition Up to Date</label>
+        <select id="tuition_fees_up_to_date">
+          <option value="1">Yes</option>
+          <option value="0">No</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section-title">Semester 1 Performance</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Enrolled</label>
+        <input type="number" id="sem1_enrolled" placeholder="Units" value="6">
+      </div>
+      <div class="field">
+        <label>Approved</label>
+        <input type="number" id="sem1_approved" placeholder="Units" value="5">
+      </div>
+      <div class="field">
+        <label>Evaluations</label>
+        <input type="number" id="sem1_evaluations" placeholder="Count" value="8">
+      </div>
+      <div class="field">
+        <label>Grade</label>
+        <input type="number" id="sem1_grade" placeholder="0-20" value="13.5" step="0.1">
+      </div>
+      <div class="field">
+        <label>Credited</label>
+        <input type="number" id="sem1_credited" placeholder="Units" value="0">
+      </div>
+      <div class="field">
+        <label>Without Evaluation</label>
+        <input type="number" id="sem1_without_eval" placeholder="Units" value="0">
+      </div>
+    </div>
+
+    <div class="form-section-title">Semester 2 Performance</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Enrolled</label>
+        <input type="number" id="sem2_enrolled" placeholder="Units" value="6">
+      </div>
+      <div class="field">
+        <label>Approved</label>
+        <input type="number" id="sem2_approved" placeholder="Units" value="5">
+      </div>
+      <div class="field">
+        <label>Evaluations</label>
+        <input type="number" id="sem2_evaluations" placeholder="Count" value="8">
+      </div>
+      <div class="field">
+        <label>Grade</label>
+        <input type="number" id="sem2_grade" placeholder="0-20" value="13.0" step="0.1">
+      </div>
+      <div class="field">
+        <label>Credited</label>
+        <input type="number" id="sem2_credited" placeholder="Units" value="0">
+      </div>
+      <div class="field">
+        <label>Without Evaluation</label>
+        <input type="number" id="sem2_without_eval" placeholder="Units" value="0">
+      </div>
+    </div>
+
+    <div class="form-section-title">Socioeconomic</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>GDP</label>
+        <input type="number" id="gdp" placeholder="e.g. 1.74" value="1.74" step="0.01">
+      </div>
+      <div class="field">
+        <label>Unemployment Rate</label>
+        <input type="number" id="unemployment_rate" placeholder="%" value="10.8" step="0.1">
+      </div>
+      <div class="field">
+        <label>Inflation Rate</label>
+        <input type="number" id="inflation_rate" placeholder="%" value="1.4" step="0.1">
+      </div>
+      <div class="field">
+        <label>Mother's Qualification</label>
+        <input type="number" id="mothers_qualification" placeholder="Code" value="19">
+      </div>
+      <div class="field">
+        <label>Father's Qualification</label>
+        <input type="number" id="fathers_qualification" placeholder="Code" value="12">
+      </div>
+      <div class="field">
+        <label>Mother's Occupation</label>
+        <input type="number" id="mothers_occupation" placeholder="Code" value="5">
+      </div>
+      <div class="field">
+        <label>Father's Occupation</label>
+        <input type="number" id="fathers_occupation" placeholder="Code" value="9">
+      </div>
+      <div class="field">
+        <label>Nationality</label>
+        <input type="number" id="nationality" placeholder="Code" value="1">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" id="predictBtn" onclick="predict()">
+        <span class="btn-text">▶ Predict</span>
+        <div class="spinner"></div>
+      </button>
+      <button class="btn-secondary" onclick="clearForm()">Clear</button>
+    </div>
+
+    <div class="error-box" id="singleError"></div>
+
+    <!-- Result -->
+    <div class="result-panel" id="resultPanel">
+      <div class="result-header">
+        <div>
+          <div class="result-label">Prediction</div>
+          <div class="prediction-badge" id="predictionBadge">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="result-label">Confidence</div>
+          <div class="confidence-pill" id="confidencePill" style="color:var(--accent);border-color:var(--accent)">—</div>
+        </div>
+      </div>
+      <div class="result-body">
+        <div class="prob-item">
+          <div class="prob-label">Graduate</div>
+          <div class="prob-bar-track"><div class="prob-bar-fill graduate" id="barGraduate" style="width:0%"></div></div>
+          <div class="prob-value" id="valGraduate">—</div>
+        </div>
+        <div class="prob-item">
+          <div class="prob-label">Enrolled</div>
+          <div class="prob-bar-track"><div class="prob-bar-fill enrolled" id="barEnrolled" style="width:0%"></div></div>
+          <div class="prob-value" id="valEnrolled">—</div>
+        </div>
+        <div class="prob-item">
+          <div class="prob-label">Dropout</div>
+          <div class="prob-bar-track"><div class="prob-bar-fill dropout" id="barDropout" style="width:0%"></div></div>
+          <div class="prob-value" id="valDropout">—</div>
+        </div>
+      </div>
+      <div class="risk-indicator">
+        <div class="risk-score-circle" id="riskCircle">—</div>
+        <div class="risk-text">
+          <strong id="riskTitle">Dropout Risk</strong>
+          <p id="riskDescription">Based on model probability scores.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch CSV tab -->
+  <div class="tab-panel" id="tab-batch">
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="csvFile" accept=".csv" onchange="onFileSelected(this)">
+      <span class="upload-icon">📂</span>
+      <div class="upload-title">Drop your CSV here</div>
+      <p class="upload-sub">or click to browse — accepts .csv files matching training schema</p>
+    </div>
+
+    <div class="file-selected" id="fileSelected">
+      <span>📄</span>
+      <span class="filename" id="selectedFilename">—</span>
+      <button class="btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="clearFile()">✕</button>
+    </div>
+
+    <div class="btn-row" style="margin-top:24px">
+      <button class="btn-primary" id="batchBtn" onclick="batchPredict()" disabled>
+        <span class="btn-text">▶ Run Batch Prediction</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+
+    <div class="error-box" id="batchError"></div>
+
+    <div class="result-panel" id="batchResult">
+      <div style="padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div class="result-label">Predictions ready</div>
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--accent)" id="batchCount">—</div>
+        </div>
+        <button class="btn-primary" id="downloadBtn" onclick="downloadCSV()">⬇ Download CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Student Success Predictor UI · FastAPI Backend Required</footer>
+</div>
+
+<script>
+let csvBlob = null;
+let selectedFile = null;
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function getApiUrl() {
+  return document.getElementById('apiUrl').value.replace(/\/$/, '');
+}
+
+async function pingApi() {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot';
+  try {
+    const r = await fetch(getApiUrl() + '/', { signal: AbortSignal.timeout(3000) });
+    if (r.ok) { dot.className = 'status-dot online'; }
+    else { dot.className = 'status-dot offline'; }
+  } catch {
+    dot.className = 'status-dot offline';
+  }
+}
+
+function gatherForm() {
+  const fields = [
+    'age_at_enrollment','gender','marital_status','international','displaced',
+    'educational_special_needs','application_mode','application_order','course',
+    'previous_qualification','previous_qualification_grade','admission_grade',
+    'daytime_evening_attendance','scholarship_holder','debtor','tuition_fees_up_to_date',
+    'sem1_enrolled','sem1_approved','sem1_evaluations','sem1_grade','sem1_credited','sem1_without_eval',
+    'sem2_enrolled','sem2_approved','sem2_evaluations','sem2_grade','sem2_credited','sem2_without_eval',
+    'gdp','unemployment_rate','inflation_rate',
+    'mothers_qualification','fathers_qualification','mothers_occupation','fathers_occupation','nationality'
+  ];
+  const data = {};
+  for (const f of fields) {
+    const el = document.getElementById(f);
+    if (el) data[f] = el.type === 'number' || el.tagName === 'SELECT' && !isNaN(el.value) ? parseFloat(el.value) : el.value;
+  }
+  return data;
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (loading) btn.classList.add('loading'), btn.disabled = true;
+  else btn.classList.remove('loading'), btn.disabled = false;
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('visible');
+}
+
+function hideError(id) {
+  document.getElementById(id).classList.remove('visible');
+}
+
+async function predict() {
+  hideError('singleError');
+  setLoading('predictBtn', true);
+  const body = gatherForm();
+
+  try {
+    const r = await fetch(getApiUrl() + '/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({detail: r.statusText}));
+      throw new Error(e.detail || 'Request failed');
+    }
+
+    const data = await r.json();
+    renderResult(data);
+  } catch(e) {
+    showError('singleError', e.message);
+  } finally {
+    setLoading('predictBtn', false);
+  }
+}
+
+function renderResult(data) {
+  const panel = document.getElementById('resultPanel');
+  panel.classList.add('visible');
+
+  const badge = document.getElementById('predictionBadge');
+  badge.textContent = data.prediction;
+  badge.className = 'prediction-badge ' + data.prediction.toLowerCase();
+
+  const conf = document.getElementById('confidencePill');
+  conf.textContent = data.confidence + '%';
+
+  const probs = data.probs_percent || {};
+  const classes = Object.keys(probs);
+
+  // Map to our display ids
+  const classMap = {
+    graduate: ['Graduate', 'barGraduate', 'valGraduate'],
+    enrolled: ['Enrolled', 'barEnrolled', 'valEnrolled'],
+    dropout: ['Dropout', 'barDropout', 'valDropout'],
+  };
+
+  for (const [key, [label, barId, valId]] of Object.entries(classMap)) {
+    const val = probs[label] ?? 0;
+    document.getElementById(barId).style.width = val + '%';
+    document.getElementById(valId).textContent = val.toFixed(1) + '%';
+  }
+
+  const risk = data.dropout_risk_score;
+  const circle = document.getElementById('riskCircle');
+  const riskTitle = document.getElementById('riskTitle');
+  const riskDesc = document.getElementById('riskDescription');
+  circle.textContent = risk.toFixed(0) + '%';
+
+  if (risk < 30) {
+    circle.className = 'risk-score-circle low';
+    riskTitle.textContent = 'Low Dropout Risk';
+    riskDesc.textContent = 'Student shows strong indicators for academic success.';
+  } else if (risk < 60) {
+    circle.className = 'risk-score-circle medium';
+    riskTitle.textContent = 'Moderate Dropout Risk';
+    riskDesc.textContent = 'Some risk factors detected — early intervention may help.';
+  } else {
+    circle.className = 'risk-score-circle high';
+    riskTitle.textContent = 'High Dropout Risk';
+    riskDesc.textContent = 'Significant risk indicators present — proactive support recommended.';
+  }
+}
+
+function clearForm() {
+  document.querySelectorAll('#tab-single input').forEach(i => i.value = '');
+  document.getElementById('resultPanel').classList.remove('visible');
+  hideError('singleError');
+}
+
+function onFileSelected(input) {
+  if (input.files.length === 0) return;
+  selectedFile = input.files[0];
+  document.getElementById('selectedFilename').textContent = selectedFile.name;
+  document.getElementById('fileSelected').classList.add('visible');
+  document.getElementById('batchBtn').disabled = false;
+  document.getElementById('batchResult').classList.remove('visible');
+  csvBlob = null;
+}
+
+function clearFile() {
+  selectedFile = null;
+  document.getElementById('csvFile').value = '';
+  document.getElementById('fileSelected').classList.remove('visible');
+  document.getElementById('batchBtn').disabled = true;
+  csvBlob = null;
+  document.getElementById('batchResult').classList.remove('visible');
+}
+
+async function batchPredict() {
+  hideError('batchError');
+  if (!selectedFile) return;
+  setLoading('batchBtn', true);
+
+  const form = new FormData();
+  form.append('file', selectedFile);
+
+  try {
+    const r = await fetch(getApiUrl() + '/predict_csv', {
+      method: 'POST',
+      body: form
+    });
+
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({detail: r.statusText}));
+      throw new Error(e.detail || 'Request failed');
+    }
+
+    csvBlob = await r.blob();
+    const text = await csvBlob.text();
+    const rows = text.trim().split('\n').length - 1;
+    document.getElementById('batchCount').textContent = rows + ' student' + (rows !== 1 ? 's' : '') + ' predicted';
+    document.getElementById('batchResult').classList.add('visible');
+  } catch(e) {
+    showError('batchError', e.message);
+  } finally {
+    setLoading('batchBtn', false);
+  }
+}
+
+function downloadCSV() {
+  if (!csvBlob) return;
+  const url = URL.createObjectURL(csvBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'predictions_' + (selectedFile?.name || 'results.csv');
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Drag-over styling
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', () => zone.classList.remove('drag-over'));
+
+// Auto-ping on load
+pingApi();
+</script>
+</body>
+</html>
