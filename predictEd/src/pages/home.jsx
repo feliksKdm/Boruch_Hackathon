@@ -1,6 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom'; // 1. Import the hook
 import Navbar from '../components/nav.jsx';
+
 export default function Home() {
+
+
   return (
     <div>
       <Navbar />
@@ -14,7 +18,11 @@ export default function Home() {
             track progress, and make data-driven decisions to improve learning outcomes.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button aria-label="Get started with perdictEd" className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white font-semibold text-base transition-colors duration-200">
+            {/* 4. Attach the click handler */}
+            <button 
+              aria-label="Get started with perdictEd" 
+              className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white font-semibold text-base transition-colors duration-200"
+            >
               Get Started
             </button>
             <button aria-label="Learn more about perdictEd" className="px-8 py-3 border border-slate-500 hover:border-indigo-400 hover:text-indigo-300 rounded-xl text-slate-300 font-semibold text-base transition-colors duration-200">
