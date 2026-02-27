@@ -1,0 +1,245 @@
+🎓 EduRisk AI – Backend API
+
+A FastAPI backend service that serves a trained machine learning model to predict student academic outcomes and dropout risk.
+
+This API powers the EduRisk AI Early Warning System, enabling real-time prediction for:
+
+🎯 Predicted Outcome: Dropout / Enrolled / Graduate
+
+📊 Dropout Risk Score (0–100%)
+
+🔎 Confidence Score
+
+📈 Probability distribution across all classes
+
+📂 Batch CSV processing
+
+🚀 Overview
+
+This backend exposes two main endpoints:
+
+Endpoint	Method	Description
+/predict	POST	Predict outcome for a single student
+/predict_csv	POST	Upload CSV file and receive predictions file
+
+The API loads a trained multi-class XGBoost model saved as:
+
+student_success_multiclass.pkl
+🏗 Architecture
+Frontend (Next.js / React)
+        ↓
+FastAPI Backend
+        ↓
+Scikit-Learn Pipeline
+        ↓
+XGBoost Multi-class Model
+
+The pipeline includes:
+
+Column normalization (snake_case)
+
+Feature engineering
+
+Missing value handling
+
+Model inference
+
+📦 Installation
+1️⃣ Clone repository
+git clone https://github.com/your-username/edurisk-ai.git
+cd edurisk-ai/backend
+2️⃣ Install dependencies
+pip install fastapi uvicorn pandas numpy scikit-learn xgboost joblib python-multipart
+▶️ Running the Server
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
+
+Open in browser:
+
+http://127.0.0.1:8000/docs
+
+Swagger UI allows interactive testing.
+
+🔮 API Endpoints
+🔹 POST /predict
+
+Predict outcome for a single student.
+
+Request Body (JSON)
+
+All feature names must be in snake_case format:
+
+{
+  "age": 21,
+  "international": 1,
+  "debtor": 1,
+  "tuition_up_to_date": 0,
+  "sem1_enrolled": 6,
+  "sem1_approved": 2,
+  "sem1_evaluations": 6,
+  "sem1_without_eval": 0,
+  "sem1_grade": 10.0,
+  "sem2_enrolled": 6,
+  "sem2_approved": 3,
+  "sem2_evaluations": 6,
+  "sem2_without_eval": 0,
+  "sem2_grade": 11.0,
+  "course": 33,
+  "attendance_type": 1,
+  "gender": 1,
+  "scholarship": 0,
+  "application_mode": 17,
+  "application_order": 1,
+  "marital_status": 1,
+  "previous_qualification": 1,
+  "nationality": 1,
+  "mother_qualification": 1,
+  "father_qualification": 1,
+  "mother_occupation": 0,
+  "father_occupation": 0,
+  "displaced": 0,
+  "special_needs": 0,
+  "unemployment_rate": 7.5,
+  "inflation_rate": 1.2,
+  "gdp": 1.8
+}
+Response
+{
+  "prediction": "Dropout",
+  "confidence": 82.4,
+  "dropout_risk_score": 82.4,
+  "probs_percent": {
+    "Dropout": 82.4,
+    "Enrolled": 12.3,
+    "Graduate": 5.3
+  }
+}
+🔹 POST /predict_csv
+
+Upload CSV file and receive predictions CSV in return.
+
+Request
+
+multipart/form-data
+
+File field name: file
+
+Response
+
+Returns CSV file including additional columns:
+
+prediction
+
+confidence
+
+dropout_risk_score
+
+prob_dropout
+
+prob_enrolled
+
+prob_graduate
+
+🧠 Model Details
+Type
+
+Multi-class Classification
+
+Classes
+
+Dropout
+
+Enrolled
+
+Graduate
+
+Risk Scoring Formula
+
+Dropout Risk Score:
+
+𝑅
+𝑖
+𝑠
+𝑘
+=
+𝑃
+(
+𝐷
+𝑟
+𝑜
+𝑝
+𝑜
+𝑢
+𝑡
+)
+×
+100
+Risk=P(Dropout)×100
+
+Risk Levels (frontend logic):
+
+🟢 Low: 0–40%
+
+🟠 Medium: 40–70%
+
+🔴 High: 70–100%
+
+🏷 Feature Engineering
+
+The API automatically creates derived features:
+
+Approval Rate
+=
+approved
+enrolled
+Approval Rate=
+enrolled
+approved
+	​
+
+Success Ratio
+=
+approved
+evaluations
+Success Ratio=
+evaluations
+approved
+	​
+
+No Evaluation Rate
+=
+without evaluations
+enrolled
+No Evaluation Rate=
+enrolled
+without evaluations
+	​
+
+
+This ensures consistency between training and inference.
+
+⚠ Error Handling
+
+503 → Model not loaded
+
+400 → Invalid CSV format
+
+422 → Invalid request body format
+
+📈 Future Improvements
+
+SHAP explainability endpoint
+
+Fairness analysis
+
+Authentication & rate limiting
+
+Docker containerization
+
+Cloud deployment (Render / Railway / AWS)
+
+👨‍💻 Author
+
+Feliks Altymyshov
+Computer Science Student | AI & Data Science
+
+If you found this project useful, consider ⭐ starring the repository.
