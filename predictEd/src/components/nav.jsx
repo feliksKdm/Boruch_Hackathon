@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import { useNavigate } from "react-router-dom"; // 1. Import the hook
 const navLinks = [
   { label: "Home", href: "#" },
   { label: "Pricing", href: "pricing.html" },
@@ -10,7 +10,11 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [active, setActive] = useState("Home");
   const [showPanel, setShowPanel] = useState(false);
+  const navigate = useNavigate(); // 2. Initialize the navigate function
 
+  const handleGetStarted = () => {
+    navigate('/survey'); // 3. Define the path to your survey page
+  };
   return (
     <div className="bg-[#0d0d0f] text-[#e8e8ec] font-['DM_Sans']">
       {/* Google Fonts Import */}
@@ -62,7 +66,7 @@ export default function Navbar() {
               {/* Student */}
               <button 
                 className="flex-1 flex flex-col items-center p-10 gap-4 hover:bg-white/[0.03] transition-all group"
-                onClick={() => alert("Student selected")}
+                onClick={() => handleGetStarted('/survey')}
               >
                 <div className="w-20 h-20 rounded-full bg-[#fab96d]/15 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
                   📖
